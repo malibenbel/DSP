@@ -1,0 +1,6 @@
+ID,Levy,Manufacturer,Model,Prod. year,Category,Leather interior,Engine volume,Mileage,Cylinders,Doors,Wheel,Color,Airbags,Turbo,NewDrive_4x4,NewDrive_Front,NewDrive_Rear,NewGear_Automatic,NewGear_Manual,NewGear_Tiptronic,NewGear_Variator,NewFuel_CNG,NewFuel_Diesel,NewFuel_Hybrid,NewFuel_Hydrogen,NewFuel_LPG,NewFuel_Petrol,NewFuel_Plug-in Hybrid
+4944,45803255,642.0,22,1271,13,9,1,2.0,165892,4.0,4,0,1,4,0,False,True,False,True,False,False,False,False,False,False,False,False,True,False
+1820,45794550,1077.0,54,911,11,4,0,3.0,117000,6.0,4,0,12,12,1,True,False,False,True,False,False,False,False,True,False,False,False,False,False
+7987,45081575,518.0,54,1165,9,4,1,2.5,36063,4.0,4,0,1,12,0,True,False,False,True,False,False,False,False,False,True,False,False,False,False
+9899,45645713,607.0,54,420,6,9,1,2.5,9626,4.0,4,0,1,12,0,False,True,False,True,False,False,False,False,False,True,False,False,False,False
+7810,45772848,353.0,30,398,10,3,1,1.8,94949,4.0,4,0,14,0,0,False,True,False,True,False,False,False,False,False,True,False,False,False,False

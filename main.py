@@ -1,34 +1,33 @@
-"""
 from fastapi import FastAPI
 from pydantic import BaseModel
 import pickle
 import numpy as np
+import uvicorn
 
-# Create an instance of FastAPI
-app = FastAPI()
-
-# Load the best model and the encoders used for categorical features
+# Carica il modello
 with open("best_model.pkl", "rb") as file:
     model = pickle.load(file)
 
-# Load the LabelEncoders from the file
+# Carica i LabelEncoder (solo se li usi davvero)
 with open("label_encoders.pkl", "rb") as file:
     label_encoders = pickle.load(file)
 
+app = FastAPI()
 
-# Define a Pydantic model for request body validation
+# Classe CarFeatures senza i vecchi campi fuel_type, gear_box_type, drive_wheels
 class CarFeatures(BaseModel):
-    # Numerical Features
+    # Numerici
+    levy: float
     mileage: float
     engine_volume: float
     cylinders: float
     doors: int
     airbags: int
     prod_year: int
-    leather_interior: int
-    turbo: int
+    leather_interior: int  # 0 o 1
+    turbo: int  # 0 o 1
 
-    # Categorical Features (One-hot encoded)
+    # One-hot
     NewDrive_4x4: bool
     NewDrive_Front: bool
     NewDrive_Rear: bool
@@ -44,89 +43,68 @@ class CarFeatures(BaseModel):
     NewFuel_Petrol: bool
     NewFuel_Plug_in_Hybrid: bool
 
-    # Categorical Features (Label encoded)
+    # Categoriali (label-encodate)
     manufacturer: str
     model: str
-    fuel_type: str
-    gear_box_type: str
-    drive_wheels: str
+    category: str
     wheel: str
     color: str
 
-
 @app.post("/predict_price/")
 def predict_car_price(car: CarFeatures):
-    # Encode categorical features using the loaded label encoders
-    encoded_features = []
-
     try:
-        # Use the label encoders to transform the input values
-        manufacturer_encoded = label_encoders["manufacturer"].transform(
-            [car.manufacturer]
-        )[0]
+        # Trasforma i campi categorici con i LabelEncoder
+        manufacturer_encoded = label_encoders["manufacturer"].transform([car.manufacturer])[0]
         model_encoded = label_encoders["model"].transform([car.model])[0]
-        fuel_type_encoded = label_encoders["fuel_type"].transform([car.fuel_type])[0]
-        gear_box_type_encoded = label_encoders["gear_box_type"].transform(
-            [car.gear_box_type]
-        )[0]
-        drive_wheels_encoded = label_encoders["drive_wheels"].transform(
-            [car.drive_wheels]
-        )[0]
+        category_encoded = label_encoders["category"].transform([car.category])[0]
         wheel_encoded = label_encoders["wheel"].transform([car.wheel])[0]
         color_encoded = label_encoders["color"].transform([car.color])[0]
     except KeyError as e:
-        raise ValueError(
-            f"Unknown category: {e} in the input data. Please provide a valid value."
-        )
+        # Se l'utente manda un valore fuori dal vocabolario
+        raise ValueError(f"Valore sconosciuto per la variabile: {e}")
 
-    # Append the encoded features
-    encoded_features = [
+    # Metti insieme gli encodings
+    encoded_categoricals = [
         manufacturer_encoded,
         model_encoded,
-        fuel_type_encoded,
-        gear_box_type_encoded,
-        drive_wheels_encoded,
+        category_encoded,
         wheel_encoded,
-        color_encoded,
+        color_encoded
     ]
 
-    # Prepare the input data for the model
-    input_data = np.array(
-        [
-            [
-                car.mileage,
-                car.engine_volume,
-                car.cylinders,
-                car.doors,
-                car.airbags,
-                car.prod_year,
-                car.leather_interior,
-                car.turbo,
-                # Add one-hot encoded features for Drive, Gear and Fuel
-                car.NewDrive_4x4,
-                car.NewDrive_Front,
-                car.NewDrive_Rear,
-                car.NewGear_Automatic,
-                car.NewGear_Manual,
-                car.NewGear_Tiptronic,
-                car.NewGear_Variator,
-                car.NewFuel_CNG,
-                car.NewFuel_Diesel,
-                car.NewFuel_Hybrid,
-                car.NewFuel_Hydrogen,
-                car.NewFuel_LPG,
-                car.NewFuel_Petrol,
-                car.NewFuel_Plug_in_Hybrid,
-            ]
-            + encoded_features  # Append the encoded categorical features
-        ]
-    )
+    # Prepara i valori in un ordine coerente con quello del training
+    input_data = np.array([[
+        car.levy,
+        car.mileage,
+        car.engine_volume,
+        car.cylinders,
+        car.doors,
+        car.airbags,
+        car.prod_year,
+        car.leather_interior,
+        car.turbo,
+        car.NewDrive_4x4,
+        car.NewDrive_Front,
+        car.NewDrive_Rear,
+        car.NewGear_Automatic,
+        car.NewGear_Manual,
+        car.NewGear_Tiptronic,
+        car.NewGear_Variator,
+        car.NewFuel_CNG,
+        car.NewFuel_Diesel,
+        car.NewFuel_Hybrid,
+        car.NewFuel_Hydrogen,
+        car.NewFuel_LPG,
+        car.NewFuel_Petrol,
+        car.NewFuel_Plug_in_Hybrid
+    ] + encoded_categoricals])
 
-    # Make prediction (Log_Price)
-    predicted_log_price = model.predict(
-        input_data
-    )  # Prediction on log-transformed price
-    predicted_price = np.expm1(predicted_log_price)  # Convert back to actual price
+    # Predici sul log(price)
+    predicted_log_price = model.predict(input_data)
+    predicted_price = np.expm1(predicted_log_price)
 
-    return {"predicted_price": predicted_price[0]}  # Return the predicted price
-"""
+    return {"predicted_price": float(predicted_price[0])}
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
