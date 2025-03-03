@@ -4,6 +4,7 @@ import pickle
 import numpy as np
 import uvicorn
 
+
 # Carica il modello
 with open("best_model.pkl", "rb") as file:
     model = pickle.load(file)
@@ -108,3 +109,9 @@ def predict_car_price(car: CarFeatures):
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+
+
+
+
