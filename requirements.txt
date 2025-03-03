@@ -1,7 +1,11 @@
-fastapi
-pandas
-numpy
-uvicorn
-pydantic
-xgboost
+fastapi 
+matplotlib 
+numpy 
+pandas 
+pydantic 
+requests 
 scikit-learn
+scipy 
+seaborn 
+streamlit 
+uvicorn
